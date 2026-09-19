@@ -417,9 +417,17 @@
 
       .hud {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
         gap: 8px;
         margin-bottom: 16px;
+      }
+
+      .rank-value {
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        font-size: 13px;
+        letter-spacing: 0.02em;
+        color: var(--accent);
       }
 
       .stat {
@@ -645,6 +653,8 @@
         let state = null;
         let selectedArchetype = ARCHETYPES[0].id;
 
+        const RANK_NAMES = ["Prospect", "Associate", "Made", "Shot Caller"];
+
         function newState(name, archetype) {
           return {
             name,
@@ -657,6 +667,7 @@
             sanity: 8,
             heat: archetype.heat,
             sentence: archetype.sentence,
+            rank: archetype.flags.includes("affiliated") ? 1 : 0,
             flags: new Set(archetype.flags),
           };
         }
@@ -671,35 +682,51 @@
             if (effect[k]) state[k] = clamp(state[k] + effect[k]);
           });
           if (effect.sentence) state.sentence = Math.max(0, state.sentence + effect.sentence);
+          if (effect.rank) state.rank = Math.max(0, Math.min(3, state.rank + effect.rank));
           if (effect.addFlags) effect.addFlags.forEach((f) => state.flags.add(f));
         }
 
         /* ---------------- story graph ---------------- */
 
-        const CHAPTER_OF = {
-          intake: 1,
-          cell: 2,
-          yard: 3,
-          work: 4,
-          conflict1: 5,
-          shakedown: 6,
-          shakedown_weapon: 6,
-          letter: 7,
-          program: 8,
-          bigfight: 9,
-          hearing: 10,
-        };
-        const TOTAL_CHAPTERS = 10;
+        const BASE_PATH = ["intake", "cell", "yard", "work", "conflict1", "shakedown", "letter", "program", "bigfight", "hearing"];
+        const GANG_PATH = [
+          "intake",
+          "cell",
+          "yard",
+          "prospect_task",
+          "work",
+          "conflict1",
+          "shakedown",
+          "initiation",
+          "letter",
+          "power_move",
+          "program",
+          "bigfight",
+          "hearing",
+        ];
+
+        function pathFor(s) {
+          return s && s.flags.has("yard_crew") ? GANG_PATH : BASE_PATH;
+        }
+
+        function chapterNumFor(s, nodeId) {
+          const id = nodeId === "shakedown_weapon" ? "shakedown" : nodeId;
+          const idx = pathFor(s).indexOf(id);
+          return idx === -1 ? null : idx + 1;
+        }
 
         const SCENE_OF = {
           intake: "processing",
           cell: "cell",
           yard: "yard",
+          prospect_task: "corridor",
           work: "work",
           conflict1: "tension",
           shakedown: "lockdown",
           shakedown_weapon: "lockdown",
+          initiation: "tension",
           letter: "window",
+          power_move: "showdown",
           program: "classroom",
           bigfight: "showdown",
           hearing: "hearing",
@@ -709,11 +736,14 @@
           intake: "Processing — Intake",
           cell: "Cell Block C",
           yard: "The Yard",
+          prospect_task: "Errand",
           work: "Work Detail",
           conflict1: "An Ask",
           shakedown: "Shakedown",
           shakedown_weapon: "Shakedown",
+          initiation: "Initiation — Blood In",
           letter: "Visitation / Mail",
+          power_move: "A Bigger Play",
           program: "Program Room",
           bigfight: "The Yard — Showdown",
           hearing: "Parole Board",
@@ -793,6 +823,17 @@
                 <g fill="#05070c"><rect x="20" y="60" width="360" height="10"/><rect x="20" y="100" width="360" height="10"/><rect x="20" y="140" width="360" height="10"/></g>
                 <g fill="#141a29"><rect x="30" y="40" width="20" height="20"/><rect x="60" y="42" width="20" height="18"/><rect x="100" y="38" width="20" height="22"/><rect x="300" y="80" width="20" height="20"/><rect x="340" y="78" width="20" height="22"/></g>
                 <rect x="0" y="180" width="400" height="40" fill="#05070c"/>
+              `);
+            case "corridor":
+              return svgWrap(`
+                <defs><linearGradient id="g12" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#1a2030"/><stop offset="100%" stop-color="#090b12"/>
+                </linearGradient></defs>
+                <rect width="400" height="220" fill="url(#g12)"/>
+                <polygon points="0,220 400,220 260,60 140,60" fill="#0d1118"/>
+                <polygon points="140,60 260,60 240,90 160,90" fill="#05070c"/>
+                <rect x="185" y="70" width="30" height="20" fill="#e0b23b" opacity="0.35"/>
+                <g fill="#05070c"><rect x="60" y="178" width="28" height="28" rx="3"/></g>
               `);
             case "tension":
               return svgWrap(`
@@ -987,12 +1028,12 @@
                     {
                       label: "Keep it low-key. You're with them, but you're not putting on a show.",
                       effect: { connections: 1 },
-                      next: "work",
+                      next: "prospect_task",
                     },
                     {
                       label: "Make a play for more respect early. Let the yard see it.",
                       effect: { respect: 1, muscle: 1, heat: 1 },
-                      next: "work",
+                      next: "prospect_task",
                     },
                   ]
                 : [
@@ -1004,7 +1045,7 @@
                     {
                       label: "Approach the Yard Crew. Protection has a price, but you need it.",
                       effect: { muscle: 1, connections: 2, heat: 1, addFlags: ["yard_crew"] },
-                      next: "work",
+                      next: "prospect_task",
                     },
                     {
                       label: "Stay solo. You don't owe anybody anything in here.",
@@ -1012,6 +1053,35 @@
                       next: "work",
                     },
                   ],
+          },
+
+          prospect_task: {
+            title: "Proving It",
+            text: (s) => [
+              s.flags.has("affiliated")
+                ? "Being claimed before you even got here bought you patience, not trust. One of the Crew's older heads finds you on the tier: \"Everybody starts somewhere. Let's see what you're actually worth.\""
+                : "Word reaches you through a third party, the way everything does in here: the Crew wants to see what you're made of before they put anything real behind you.",
+              "It's a small thing, they say. Small things are how they find out if you're worth the investment.",
+            ],
+            choices: () => [
+              {
+                label: "Carry a message across the block, no questions asked.",
+                effect: { connections: 1, heat: 1 },
+                next: "work",
+              },
+              {
+                label: "Move a package through a work-detail checkpoint.",
+                effect: { connections: 2, respect: 1, heat: 2, rank: 1, addFlags: ["prospect_bold"] },
+                feel: "Your hands don't shake carrying it, which surprises you more than it should. When it's finally out of your hands again, you breathe like you'd been holding it the whole walk.",
+                next: "work",
+              },
+              {
+                label: "Tell them you're not ready for this yet.",
+                effect: { respect: -2, connections: -1, addFlags: ["prospect_hesitant"] },
+                feel: "Nobody argues with you. Nobody has to. You just watch the invitation quietly close.",
+                next: "work",
+              },
+            ],
           },
 
           work: {
@@ -1124,7 +1194,9 @@
                     "They find nothing on you — this time. But you clocked exactly how close nothing was.",
                   ],
             redirect: (s) => (s.flags.has("held_weapon") ? "shakedown_weapon" : null),
-            choices: () => [{ label: "Keep moving.", effect: {}, next: "letter" }],
+            choices: (s) => [
+              { label: "Keep moving.", effect: {}, next: s.flags.has("yard_crew") ? "initiation" : "letter" },
+            ],
           },
 
           shakedown_weapon: {
@@ -1133,20 +1205,53 @@
               "Lockdown. A CO works your cell corner by corner and stops cold at your bunk — the cloth-wrapped weight you've been sitting on for two days, found in about four seconds.",
               `"Whose is this?" He's not really asking. He already knows you're going to answer one way or the other.`,
             ],
-            choices: () => [
+            choices: (s) => [
               {
                 label: "Take it yourself. You held it, it's yours.",
                 effect: { respect: 3, connections: 1, sentence: 26, addFlags: ["new_charge"] },
                 feel: "The word comes out steady. Inside, something else just got heavier than the thing they found — and it's going to stay heavy for a while.",
-                next: "letter",
+                next: s.flags.has("yard_crew") ? "initiation" : "letter",
               },
               {
                 label: "Give up who handed it to you.",
                 effect: { connections: -3, respect: -3, heat: -2, addFlags: ["ratted"] },
                 feel: "You say the name. It's the easiest hard thing you've ever done, and you already know you'll be thinking about it long after you're out.",
-                next: "letter",
+                next: s.flags.has("yard_crew") ? "initiation" : "letter",
               },
             ],
+          },
+
+          initiation: {
+            title: "Blood In",
+            text: () => [
+              "The Crew doesn't vote you in with words. There's a version of this for everyone, and yours is waiting behind the laundry room after count — a handful of guys who'll decide, one way or another, whether you're actually one of them.",
+              `"Everybody pays for it somehow," the one who brought you says. "Question's just how."`,
+            ],
+            choices: (s) => {
+              const opts = [
+                {
+                  label: "Take it. Stand there and let them see you take it.",
+                  effect: { respect: 2, health: -3, rank: 1, addFlags: ["blood_in"] },
+                  feel: "It doesn't stop when you think it will. When it finally does, somebody pulls you up off the floor like this is nothing. Like this is just Tuesday now.",
+                  next: "letter",
+                },
+                {
+                  label: "Walk away from what this is turning into.",
+                  effect: { connections: -3, respect: -1, addFlags: ["left_crew"] },
+                  feel: "You expect shouting. You get quiet instead, which is worse — the kind of quiet that means you're not really one of them, and everyone just agreed on it at once.",
+                  next: "letter",
+                },
+              ];
+              if (s.connections >= 6) {
+                opts.splice(1, 0, {
+                  label: "Offer to handle a real job for them instead — no fists, just nerve.",
+                  effect: { connections: 1, heat: 2, rank: 1, addFlags: ["blood_in_task"] },
+                  feel: "No bruises this time. Just a favor with your name already attached to it, filed away somewhere you can't see and can't take back.",
+                  next: "letter",
+                });
+              }
+              return opts;
+            },
           },
 
           letter: {
@@ -1155,25 +1260,66 @@
               "Mail call. Your name gets read and a thin envelope lands in your hands — familiar handwriting, a return address you know by heart.",
               "You haven't decided yet how much of this place you want them to know about.",
             ],
-            choices: () => [
+            choices: (s) => [
               {
                 label: "Write back. Stay close, tell them the truth.",
                 effect: { sanity: 2, addFlags: ["family_support"] },
                 feel: "For a few minutes, writing it out, you're not in here at all. You fold the letter twice before you can make yourself stop rereading it.",
-                next: "program",
+                next: s.flags.has("yard_crew") ? "power_move" : "program",
               },
               {
                 label: "Write back, but keep it light. Protect them from the real picture.",
                 effect: { sanity: 1 },
-                next: "program",
+                next: s.flags.has("yard_crew") ? "power_move" : "program",
               },
               {
                 label: "Don't respond. Easier if they stop waiting on you.",
                 effect: { sanity: -2, addFlags: ["cut_ties"] },
                 feel: "You tell yourself it's kinder this way. It doesn't feel kind. It just feels quiet, and the quiet doesn't go away after you put the letter down.",
-                next: "program",
+                next: s.flags.has("yard_crew") ? "power_move" : "program",
               },
             ],
+          },
+
+          power_move: {
+            title: "A Bigger Play",
+            text: (s) =>
+              s.rank >= 2
+                ? [
+                    "One of the Crew's shot callers is getting transferred out, and for the first time since you got here, there's an actual opening above you instead of just beside you.",
+                    "Nobody's saying it outright. They don't have to. Everyone on the tier already knows what this moment is.",
+                  ]
+                : [
+                    "There's a shakeup coming in the Crew's leadership — the kind of thing that decides who runs what for the next few years.",
+                    "You're not far enough in for this to be your call. You watch it happen from the outside, same as everyone else on the tier who isn't in the room.",
+                  ],
+            choices: (s) => {
+              if (s.rank >= 2) {
+                return [
+                  {
+                    label: "Make your move. Push for it.",
+                    effect: { respect: 3, connections: 2, heat: 3, rank: 1, addFlags: ["power_move_taken"] },
+                    feel: "You don't really remember deciding to say yes. You just remember your own voice already answering before the rest of you caught up.",
+                    next: "program",
+                  },
+                  {
+                    label: "Let someone else take the risk. Stay where you're solid.",
+                    effect: { connections: 1, addFlags: ["stayed_associate"] },
+                    next: "program",
+                  },
+                  {
+                    label: "Quietly tip off a CO about what's about to happen.",
+                    effect: { heat: -3, connections: -4, respect: -3, addFlags: ["betrayed_crew"] },
+                    feel: "It's done before you can talk yourself out of it. You don't feel lighter. You feel like you just wired something to go off later, somewhere you won't see it coming.",
+                    next: "program",
+                  },
+                ];
+              }
+              return [
+                { label: "Watch closely. Learn how it actually works.", effect: { smarts: 1 }, next: "program" },
+                { label: "Stay out of it completely.", effect: { sanity: 1 }, next: "program" },
+              ];
+            },
           },
 
           program: {
@@ -1301,6 +1447,15 @@
               ],
             };
           }
+          if (s.flags.has("betrayed_crew")) {
+            return {
+              tone: "bad",
+              title: "No Allies Left",
+              lines: [
+                "Whatever you told that CO bought you something — a quieter last stretch, maybe, or just less weight to carry. It also means there's nobody left in here who has your back, and you clocked exactly how far word like that travels the day you walked out the gate.",
+              ],
+            };
+          }
           if (s.flags.has("ratted")) {
             return {
               tone: "mixed",
@@ -1310,12 +1465,21 @@
               ],
             };
           }
-          if (s.flags.has("yard_crew") && s.respect >= 8 && s.connections >= 8) {
+          if (s.flags.has("left_crew") && !s.flags.has("new_charge")) {
+            return {
+              tone: "mixed",
+              title: "Out From Under It",
+              lines: [
+                "You got close enough to the Crew to know exactly what saying yes would've cost, and you said no anyway. It didn't make you popular. It also means you're walking out without their name attached to yours — which, in here, turned out to be worth more than the protection would've been.",
+              ],
+            };
+          }
+          if (s.flags.has("yard_crew") && s.rank >= 3) {
             return {
               tone: "mixed",
               title: "Shot Caller",
               lines: [
-                "You didn't just survive the Crew — you became one of the names that runs it. The board notes your file, flags you as a known STG member, and grants parole anyway, on paper.",
+                "You didn't just survive the Crew — you climbed it, rung by rung, until you were one of the names that runs it. The board notes your file, flags you as a known STG member, and grants parole anyway, on paper.",
                 "The block already has a request in for when you're back. Everybody in here assumes that's a when, not an if. You're starting to assume it too.",
               ],
             };
@@ -1332,6 +1496,15 @@
               lines: [
                 "The board grants parole without much debate — completed program, no new charges, a support system on the outside that never stopped writing back. You walk out the gate into a life that's actually waiting for you.",
                 "It's not going to be easy. But for the first time since intake, it's yours to build.",
+              ],
+            };
+          }
+          if (s.flags.has("yard_crew") && s.rank === 2) {
+            return {
+              tone: "mixed",
+              title: "Made Man",
+              lines: [
+                "You went in green and came out with a rank that means something on both sides of the fence. The board grants parole, but the Crew already has a coat lined up for you the day you get out — this isn't over just because your sentence is.",
               ],
             };
           }
@@ -1438,12 +1611,24 @@
           return wrap;
         }
 
+        function rankTile(rank) {
+          const wrap = el("div", { class: "stat" });
+          wrap.appendChild(el("span", { class: "label" }, [document.createTextNode("Rank")]));
+          wrap.appendChild(
+            el("div", { class: "rank-value" }, [document.createTextNode(RANK_NAMES[Math.max(0, Math.min(3, rank))])])
+          );
+          return wrap;
+        }
+
         function renderHUD() {
           const hud = el("div", { class: "hud" });
           hud.appendChild(statBar("Respect", state.respect, "respect"));
           hud.appendChild(statBar("Health", state.health, "health"));
           hud.appendChild(statBar("Sanity", state.sanity, "sanity"));
           hud.appendChild(statBar("Heat", state.heat, "heat"));
+          if (state.flags.has("yard_crew")) {
+            hud.appendChild(rankTile(state.rank));
+          }
           return hud;
         }
 
@@ -1464,11 +1649,11 @@
           root.innerHTML = "";
           root.appendChild(renderHUD());
 
-          const chapterNum = CHAPTER_OF[nodeId] || CHAPTER_OF[node.chapterKey] || null;
+          const chapterNum = chapterNumFor(state, nodeId);
           if (chapterNum) {
             root.appendChild(
               el("div", { class: "progress" }, [
-                document.createTextNode(`Chapter ${chapterNum} of ${TOTAL_CHAPTERS}`),
+                document.createTextNode(`Chapter ${chapterNum} of ${pathFor(state).length}`),
               ])
             );
           }
