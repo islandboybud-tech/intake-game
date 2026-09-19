@@ -1,0 +1,1213 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>INTAKE</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0b0e14;
+        --panel: #131826;
+        --panel-2: #171d2e;
+        --border: #262e45;
+        --accent: #e0b23b;
+        --accent-2: #8b93a7;
+        --danger: #e0664b;
+        --ok: #5bb98c;
+        --text: #e6e9f0;
+        --text-dim: #8b93a7;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: radial-gradient(1200px 800px at 50% -10%, #17203a 0%, var(--bg) 55%);
+        color: var(--text);
+        font-family: "Inter", system-ui, sans-serif;
+      }
+
+      body {
+        display: flex;
+        justify-content: center;
+        padding: 28px 16px 60px;
+      }
+
+      /* faint CRT-style scanlines over the whole page for an institutional,
+         under-fluorescent-light feel */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background: repeating-linear-gradient(
+          to bottom,
+          rgba(255, 255, 255, 0.025) 0px,
+          rgba(255, 255, 255, 0.025) 1px,
+          transparent 1px,
+          transparent 3px
+        );
+        mix-blend-mode: overlay;
+        opacity: 0.5;
+        animation: flicker 7s infinite steps(1);
+      }
+
+      @keyframes flicker {
+        0%,
+        92%,
+        100% {
+          opacity: 0.5;
+        }
+        93% {
+          opacity: 0.32;
+        }
+        95% {
+          opacity: 0.6;
+        }
+        97% {
+          opacity: 0.38;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        body::before {
+          animation: none;
+        }
+      }
+
+      .app {
+        width: 100%;
+        max-width: 640px;
+      }
+
+      header.top {
+        position: relative;
+        text-align: center;
+        margin-bottom: 22px;
+        padding: 28px 16px 22px;
+        border-radius: 14px;
+        overflow: hidden;
+      }
+
+      header.top::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0 3px, transparent 3px 30px);
+        -webkit-mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
+        mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
+      }
+
+      header.top::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(420px 160px at 50% 0%, rgba(224, 178, 59, 0.12), transparent 70%);
+      }
+
+      header.top > * {
+        position: relative;
+      }
+
+      .eyebrow {
+        font-family: "Barlow Condensed", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.28em;
+        font-size: 11px;
+        color: var(--text-dim);
+        margin-bottom: 8px;
+      }
+
+      header.top h1 {
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        font-size: 34px;
+        margin: 0;
+        color: var(--accent);
+        text-shadow: 0 0 24px rgba(224, 178, 59, 0.25);
+      }
+
+      header.top p {
+        margin: 4px 0 0;
+        color: var(--text-dim);
+        font-size: 13px;
+        letter-spacing: 0.02em;
+      }
+
+      .top-divider {
+        width: 120px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--border), transparent);
+        margin: 16px auto 0;
+        position: relative;
+      }
+
+      .top-divider::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: -2px;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--accent);
+        transform: translateX(-50%);
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 24px;
+        box-shadow: 0 24px 60px -30px rgba(0, 0, 0, 0.7);
+      }
+
+      /* ---- character creation ---- */
+
+      label.field {
+        display: block;
+        margin-bottom: 18px;
+      }
+
+      label.field span {
+        display: block;
+        font-family: "Barlow Condensed", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-size: 13px;
+        color: var(--text-dim);
+        margin-bottom: 6px;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px 12px;
+        color: var(--text);
+        font-family: "Inter", sans-serif;
+        font-size: 15px;
+      }
+
+      input[type="text"]:focus {
+        outline: 2px solid var(--accent);
+        outline-offset: 1px;
+      }
+
+      .archetypes {
+        display: grid;
+        gap: 10px;
+      }
+
+      .archetype {
+        position: relative;
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px 14px;
+        cursor: pointer;
+        transition: border-color 0.15s;
+      }
+
+      .archetype:hover {
+        border-color: var(--accent-2);
+      }
+
+      .archetype.selected {
+        border-color: var(--accent);
+        background: #1d1a12;
+      }
+
+      .archetype-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 4px;
+        padding-right: 40px;
+      }
+
+      .archetype-icon {
+        flex: none;
+        width: 26px;
+        height: 26px;
+        color: var(--text-dim);
+        transition: color 0.15s;
+      }
+
+      .archetype-icon svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .archetype:hover .archetype-icon,
+      .archetype.selected .archetype-icon {
+        color: var(--accent);
+      }
+
+      .archetype h3 {
+        margin: 0;
+        font-family: "Barlow Condensed", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        font-size: 17px;
+      }
+
+      .archetype p {
+        margin: 0;
+        color: var(--text-dim);
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
+      .archetype-tag {
+        position: absolute;
+        top: 12px;
+        right: 14px;
+        font-family: "Barlow Condensed", sans-serif;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        color: var(--text-dim);
+        opacity: 0.65;
+      }
+
+      button {
+        font-family: "Barlow Condensed", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 700;
+        font-size: 15px;
+        padding: 11px 20px;
+        border-radius: 8px;
+        border: 1px solid var(--accent);
+        background: transparent;
+        color: var(--accent);
+        cursor: pointer;
+        width: 100%;
+      }
+
+      button.primary {
+        background: var(--accent);
+        color: #14110a;
+      }
+
+      button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      button:not(:disabled):active {
+        transform: scale(0.99);
+      }
+
+      /* ---- HUD ---- */
+
+      .hud {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+
+      .stat {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 8px 10px;
+      }
+
+      .stat span.label {
+        display: block;
+        font-family: "Barlow Condensed", sans-serif;
+        text-transform: uppercase;
+        font-size: 11px;
+        letter-spacing: 0.05em;
+        color: var(--text-dim);
+        margin-bottom: 4px;
+      }
+
+      .bar {
+        height: 5px;
+        border-radius: 3px;
+        background: #232a3d;
+        overflow: hidden;
+      }
+
+      .bar > i {
+        display: block;
+        height: 100%;
+        background: var(--accent-2);
+        transition: width 0.3s;
+      }
+
+      .bar.respect > i {
+        background: #e0b23b;
+      }
+      .bar.health > i {
+        background: #5bb98c;
+      }
+      .bar.sanity > i {
+        background: #7aa2e0;
+      }
+      .bar.heat > i {
+        background: #e0664b;
+      }
+
+      .progress {
+        font-size: 12px;
+        color: var(--text-dim);
+        text-align: right;
+        margin-bottom: 10px;
+        letter-spacing: 0.03em;
+      }
+
+      /* ---- narrative ---- */
+
+      .chapter-title {
+        font-family: "Barlow Condensed", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-size: 22px;
+        margin: 0 0 12px;
+        color: var(--text);
+      }
+
+      .body-text p {
+        line-height: 1.6;
+        color: #d3d7e2;
+        margin: 0 0 12px;
+        font-size: 15px;
+      }
+
+      .choices {
+        display: grid;
+        gap: 10px;
+        margin-top: 18px;
+      }
+
+      .choices button {
+        text-align: left;
+        text-transform: none;
+        font-family: "Inter", sans-serif;
+        font-weight: 600;
+        font-size: 14.5px;
+        letter-spacing: 0;
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        color: var(--text);
+        padding: 13px 16px;
+      }
+
+      .choices button:hover {
+        border-color: var(--accent);
+      }
+
+      /* ---- ending ---- */
+
+      .ending-title {
+        font-family: "Barlow Condensed", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-size: 30px;
+        margin: 0 0 6px;
+      }
+
+      .ending-title.good {
+        color: var(--ok);
+      }
+      .ending-title.bad {
+        color: var(--danger);
+      }
+      .ending-title.mixed {
+        color: var(--accent);
+      }
+
+      .ending-sub {
+        color: var(--text-dim);
+        font-size: 13px;
+        margin-bottom: 16px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .summary {
+        margin-top: 18px;
+        padding-top: 14px;
+        border-top: 1px solid var(--border);
+        font-size: 13px;
+        color: var(--text-dim);
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px 16px;
+      }
+
+      .summary b {
+        color: var(--text);
+      }
+
+      footer.credit {
+        text-align: center;
+        margin-top: 18px;
+        color: var(--text-dim);
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header class="top">
+        <div class="eyebrow">Correctional Intake File</div>
+        <h1>Intake</h1>
+        <p>A choice-driven story. Every decision follows you.</p>
+        <div class="top-divider"></div>
+      </header>
+      <div id="root"></div>
+      <footer class="credit">Fiction. No affiliation with any real facility, agency, or person.</footer>
+    </div>
+
+    <script>
+      (function () {
+        const root = document.getElementById("root");
+
+        /* ---------------- state ---------------- */
+
+        const ICON = {
+          card: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="14" rx="2"/><circle cx="9.5" cy="10.5" r="2"/><line x1="7.5" y1="15" x2="11.5" y2="15"/><line x1="14" y1="9" x2="17" y2="9"/><line x1="14" y1="12" x2="17" y2="12"/></svg>',
+          dice: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="10" height="10" rx="2"/><rect x="10" y="4" width="10" height="10" rx="2"/><circle cx="7.6" cy="12.6" r="0.9" fill="currentColor" stroke="none"/><circle cx="10.4" cy="15.4" r="0.9" fill="currentColor" stroke="none"/><circle cx="13.6" cy="7.6" r="0.9" fill="currentColor" stroke="none"/><circle cx="16.4" cy="10.4" r="0.9" fill="currentColor" stroke="none"/></svg>',
+          fist: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5.5" y="10.5" width="13" height="8" rx="3.5"/><line x1="8.5" y1="10.5" x2="8.5" y2="6.5"/><line x1="12" y1="10.5" x2="12" y2="5.5"/><line x1="15.5" y1="10.5" x2="15.5" y2="6.5"/></svg>',
+          link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="4.2"/><circle cx="15" cy="12" r="4.2"/></svg>',
+        };
+
+        const ARCHETYPES = [
+          {
+            id: "naive",
+            name: "Wrong Place, Wrong Time",
+            desc: "First offense. You still can't quite believe you're here.",
+            icon: ICON.card,
+            tag: "FILE A-01",
+            stats: { muscle: 4, smarts: 7, connections: 4 },
+            respect: 3,
+            heat: 2,
+            sentence: 52,
+            flags: ["naive"],
+          },
+          {
+            id: "hustler",
+            name: "Small-Time Hustler",
+            desc: "Not your first time inside, and you know how to work an angle.",
+            icon: ICON.dice,
+            tag: "FILE A-02",
+            stats: { muscle: 5, smarts: 6, connections: 6 },
+            respect: 4,
+            heat: 3,
+            sentence: 78,
+            flags: ["hustler"],
+          },
+          {
+            id: "enforcer",
+            name: "The Enforcer",
+            desc: "A violent charge got you here. People already know your name.",
+            icon: ICON.fist,
+            tag: "FILE A-03",
+            stats: { muscle: 7, smarts: 4, connections: 5 },
+            respect: 6,
+            heat: 4,
+            sentence: 104,
+            flags: ["enforcer"],
+          },
+          {
+            id: "affiliated",
+            name: "Affiliated",
+            desc: "You came in with backup. The Yard Crew already claims you.",
+            icon: ICON.link,
+            tag: "FILE A-04",
+            stats: { muscle: 6, smarts: 4, connections: 7 },
+            respect: 5,
+            heat: 5,
+            sentence: 91,
+            flags: ["affiliated", "yard_crew"],
+          },
+        ];
+
+        let state = null;
+        let selectedArchetype = ARCHETYPES[0].id;
+
+        function newState(name, archetype) {
+          return {
+            name,
+            archetype: archetype.id,
+            muscle: archetype.stats.muscle,
+            smarts: archetype.stats.smarts,
+            connections: archetype.stats.connections,
+            respect: archetype.respect,
+            health: 8,
+            sanity: 8,
+            heat: archetype.heat,
+            sentence: archetype.sentence,
+            flags: new Set(archetype.flags),
+          };
+        }
+
+        function clamp(n) {
+          return Math.max(0, Math.min(10, n));
+        }
+
+        function applyEffect(effect) {
+          if (!effect) return;
+          ["muscle", "smarts", "connections", "respect", "health", "sanity", "heat"].forEach((k) => {
+            if (effect[k]) state[k] = clamp(state[k] + effect[k]);
+          });
+          if (effect.sentence) state.sentence = Math.max(0, state.sentence + effect.sentence);
+          if (effect.addFlags) effect.addFlags.forEach((f) => state.flags.add(f));
+        }
+
+        /* ---------------- story graph ---------------- */
+
+        const CHAPTER_OF = {
+          intake: 1,
+          cell: 2,
+          yard: 3,
+          work: 4,
+          conflict1: 5,
+          shakedown: 6,
+          shakedown_weapon: 6,
+          letter: 7,
+          program: 8,
+          bigfight: 9,
+          hearing: 10,
+        };
+        const TOTAL_CHAPTERS = 10;
+
+        const NODES = {
+          intake: {
+            title: "Intake",
+            text: () => [
+              "Fluorescent light, a line of plastic chairs, a CO reading names off a clipboard like it's roll call for cattle. The jumpsuit doesn't fit. Nothing about this fits yet.",
+              "Somewhere behind you, someone laughs too loud. Everyone in this room is deciding who you are in the next five minutes, whether you like it or not.",
+            ],
+            choices: () => [
+              {
+                label: "Keep your head down. Don't give them anything to read.",
+                effect: { smarts: 1, heat: -1 },
+                next: "cell",
+              },
+              {
+                label: "Meet a few eyes. Let them know you're not scared.",
+                effect: { muscle: 1, respect: 1, heat: 1 },
+                next: "cell",
+              },
+              {
+                label: "Ask the CO how this all works. You want to understand the system.",
+                effect: { smarts: -1, heat: 1, addFlags: ["asked_questions"] },
+                next: "cell",
+              },
+            ],
+          },
+
+          cell: {
+            title: "The Cell",
+            text: (s) => [
+              `Your cellmate is already sizing you up before the door shuts — top bunk, arms crossed, watching you set down the little you were issued.`,
+              `"New fish," he says, not really to you. He nudges your rolled-up mattress off the bunk with his foot and waits to see what you do about it.`,
+            ],
+            choices: () => [
+              {
+                label: "Get in his face. Make it clear that doesn't happen twice.",
+                effect: { respect: 2, health: -1, addFlags: ["earned_respect"] },
+                next: "yard",
+              },
+              {
+                label: "Stay level. Offer him something from your commissary bag to smooth it over.",
+                effect: { connections: 1 },
+                next: "yard",
+              },
+              {
+                label: "Report it to the CO on the block.",
+                effect: { heat: 1, respect: -2, addFlags: ["snitch_tag"] },
+                next: "yard",
+              },
+            ],
+          },
+
+          yard: {
+            title: "The Yard",
+            text: (s) =>
+              s.flags.has("affiliated")
+                ? [
+                    "Word travels fast. By the time you're out on the yard, two of the Crew are already walking your way like they've been expecting you.",
+                    `"Heard you were coming," one says. "We look out for our own in here. You just gotta decide how loud you want to be about it."`,
+                  ]
+                : [
+                    "The yard sorts itself the way water finds cracks — by the fence, a handful of guys pass paperback books back and forth, quiet, watchful. Near the weight pile, a tighter group clocks everyone who walks by. And off on your own, nobody's watching you at all.",
+                    "Nobody says you have to pick a side. But everybody already has.",
+                  ],
+            choices: (s) =>
+              s.flags.has("affiliated")
+                ? [
+                    {
+                      label: "Keep it low-key. You're with them, but you're not putting on a show.",
+                      effect: { connections: 1 },
+                      next: "work",
+                    },
+                    {
+                      label: "Make a play for more respect early. Let the yard see it.",
+                      effect: { respect: 1, muscle: 1, heat: 1 },
+                      next: "work",
+                    },
+                  ]
+                : [
+                    {
+                      label: "Sit in with the guys trading books. They call it the Book Club.",
+                      effect: { smarts: 1, addFlags: ["book_club"] },
+                      next: "work",
+                    },
+                    {
+                      label: "Approach the Yard Crew. Protection has a price, but you need it.",
+                      effect: { muscle: 1, connections: 2, heat: 1, addFlags: ["yard_crew"] },
+                      next: "work",
+                    },
+                    {
+                      label: "Stay solo. You don't owe anybody anything in here.",
+                      effect: { addFlags: ["lone_wolf"] },
+                      next: "work",
+                    },
+                  ],
+          },
+
+          work: {
+            title: "Work Assignment",
+            text: () => [
+              "A CO reads off the open jobs on the block: kitchen, laundry, or — for the handful who test into it — the library.",
+              "Whatever you pick is most of your day for a long time. It's also the difference between disappearing into it and finding a way to use it.",
+            ],
+            choices: (s) => {
+              const opts = [];
+              if (s.smarts >= 6) {
+                opts.push({
+                  label: "Test into the library job.",
+                  effect: { smarts: 1, sanity: 1, addFlags: ["library_job"] },
+                  next: "conflict1",
+                });
+              }
+              opts.push({
+                label: "Kitchen duty. Extra food, extra trade, extra eyes on you.",
+                effect: { connections: 1, addFlags: ["kitchen_job"] },
+                next: "conflict1",
+              });
+              opts.push({
+                label: "Laundry. Nobody bothers you. Nobody notices you either.",
+                effect: { sanity: -1, addFlags: ["laundry_job"] },
+                next: "conflict1",
+              });
+              opts.push({
+                label: "Refuse the assignment.",
+                effect: { heat: 1, respect: -1, addFlags: ["refused_work"] },
+                next: "conflict1",
+              });
+              return opts;
+            },
+          },
+
+          conflict1: {
+            title: "An Ask",
+            text: (s) => {
+              if (s.flags.has("yard_crew")) {
+                return [
+                  `One of the Crew finds you between counts and presses something wrapped in cloth into your hands — small, hard, unmistakable.`,
+                  `"Just hold it. Your cell's cleaner than ours right now. We look out for you, you look out for us."`,
+                ];
+              }
+              if (s.flags.has("book_club")) {
+                return [
+                  "One of the Book Club guys is stuck — he's got a GED practice test tomorrow and he's nowhere close to ready. He asks if you'll slip him the answers during the test instead of actually helping him study.",
+                  "It's a small thing. It's also exactly how everything in here starts small.",
+                ];
+              }
+              return [
+                "A shove turns into a shout turns into two guys squared up by the handball court, fast enough that half the yard doesn't notice until it's already happening.",
+                "Nobody's called it yet. You're close enough that whatever you do next, people will remember.",
+              ];
+            },
+            choices: (s) => {
+              if (s.flags.has("yard_crew")) {
+                return [
+                  {
+                    label: "Agree. You're in this deep already.",
+                    effect: { respect: 2, connections: 1, heat: 3, addFlags: ["held_weapon"] },
+                    next: "shakedown",
+                  },
+                  {
+                    label: "Refuse. Not worth what it costs you.",
+                    effect: { respect: -2, connections: -1, addFlags: ["refused_crew"] },
+                    next: "shakedown",
+                  },
+                ];
+              }
+              if (s.flags.has("book_club")) {
+                return [
+                  {
+                    label: "Help him cheat. He needs the win more than you need the principle.",
+                    effect: { connections: 1, smarts: -1, addFlags: ["cheated"] },
+                    next: "shakedown",
+                  },
+                  {
+                    label: "Refuse, but help him study for real instead.",
+                    effect: { smarts: 1, sanity: 1 },
+                    next: "shakedown",
+                  },
+                ];
+              }
+              return [
+                {
+                  label: "Step in and break it up.",
+                  effect: { muscle: 1, respect: 1, health: -2, addFlags: ["intervened"] },
+                  next: "shakedown",
+                },
+                {
+                  label: "Walk the other way. Not your fight.",
+                  effect: { sanity: -1, addFlags: ["walked_away"] },
+                  next: "shakedown",
+                },
+              ];
+            },
+          },
+
+          shakedown: {
+            title: "Shakedown",
+            text: (s) =>
+              s.flags.has("held_weapon")
+                ? ["shakedown_weapon"] // handled by redirect below
+                : [
+                    "Alarms. Doors lock down mid-yard and COs move cell to cell, tossing mattresses and turning out lockers. You stand against the wall with everyone else while they go through your things.",
+                    "They find nothing on you — this time. But you clocked exactly how close nothing was.",
+                  ],
+            redirect: (s) => (s.flags.has("held_weapon") ? "shakedown_weapon" : null),
+            choices: () => [{ label: "Keep moving.", effect: {}, next: "letter" }],
+          },
+
+          shakedown_weapon: {
+            title: "Shakedown",
+            text: () => [
+              "Lockdown. A CO works your cell corner by corner and stops cold at your bunk — the cloth-wrapped weight you've been sitting on for two days, found in about four seconds.",
+              `"Whose is this?" He's not really asking. He already knows you're going to answer one way or the other.`,
+            ],
+            choices: () => [
+              {
+                label: "Take it yourself. You held it, it's yours.",
+                effect: { respect: 3, connections: 1, sentence: 26, addFlags: ["new_charge"] },
+                next: "letter",
+              },
+              {
+                label: "Give up who handed it to you.",
+                effect: { connections: -3, respect: -3, heat: -2, addFlags: ["ratted"] },
+                next: "letter",
+              },
+            ],
+          },
+
+          letter: {
+            title: "Outside",
+            text: () => [
+              "Mail call. Your name gets read and a thin envelope lands in your hands — familiar handwriting, a return address you know by heart.",
+              "You haven't decided yet how much of this place you want them to know about.",
+            ],
+            choices: () => [
+              {
+                label: "Write back. Stay close, tell them the truth.",
+                effect: { sanity: 2, addFlags: ["family_support"] },
+                next: "program",
+              },
+              {
+                label: "Write back, but keep it light. Protect them from the real picture.",
+                effect: { sanity: 1 },
+                next: "program",
+              },
+              {
+                label: "Don't respond. Easier if they stop waiting on you.",
+                effect: { sanity: -2, addFlags: ["cut_ties"] },
+                next: "program",
+              },
+            ],
+          },
+
+          program: {
+            title: "The Program",
+            text: (s) =>
+              s.flags.has("new_charge")
+                ? [
+                    "A new charge on your file bumps you off the waitlist for GED and vocational programs — not eligible, not with pending disciplinary action.",
+                    "You watch the list go up on the board without your name on it.",
+                  ]
+                : [
+                    "A slot opens up in the GED and vocational program. It's extra hours, extra structure, and extra scrutiny — but it's also the only thing on this block that points anywhere but back to a cell.",
+                  ],
+            choices: (s) =>
+              s.flags.has("new_charge")
+                ? [{ label: "Keep moving.", effect: { addFlags: ["skipped_program"] }, next: "bigfight" }]
+                : [
+                    {
+                      label: "Enroll. Put in the work.",
+                      effect: { smarts: 1, sanity: 1, addFlags: ["completed_program"] },
+                      next: "bigfight",
+                    },
+                    {
+                      label: "Skip it. Not worth the hours.",
+                      effect: { addFlags: ["skipped_program"] },
+                      next: "bigfight",
+                    },
+                  ],
+          },
+
+          bigfight: {
+            title: "The Test",
+            text: () => [
+              "It finally comes to a head — the kind of moment this place has been building toward since the day you walked in. Someone squares up on you directly, in front of enough people that walking away and fighting are both going to follow you.",
+              "Whatever you do in the next thirty seconds, the whole block is going to know about it by dinner.",
+            ],
+            choices: (s) => {
+              const opts = [
+                {
+                  label: "Fight. Finish it clean.",
+                  effect: { muscle: 1, respect: 2, health: -3, addFlags: ["violent_incident"] },
+                  next: "hearing",
+                },
+                {
+                  label: "Walk away. Let them talk.",
+                  effect: { sanity: -1, respect: -1 },
+                  next: "hearing",
+                },
+              ];
+              if (s.smarts >= 7) {
+                opts.splice(1, 0, {
+                  label: "Talk him down. You're sharp enough to find the way out.",
+                  effect: { sanity: 1, respect: 1 },
+                  next: "hearing",
+                });
+              }
+              if (s.flags.has("yard_crew") || s.flags.has("affiliated")) {
+                opts.push({
+                  label: "Call in your people.",
+                  effect: { connections: 1, respect: 2, health: -1, heat: 1, addFlags: ["violent_incident"] },
+                  next: "hearing",
+                });
+              }
+              return opts;
+            },
+          },
+
+          hearing: {
+            title: "The Board",
+            text: (s) => [
+              `Months of this have come down to a folding table, three people in plain clothes, and your file open in front of them — every choice you made in here reduced to a page of notes.`,
+              `"Anything you want to say for yourself?" the chair asks, not looking up yet.`,
+            ],
+            choices: () => [
+              {
+                label: "Tell them everything, straight.",
+                effect: { sanity: 1, smarts: 1 },
+                next: "ending",
+              },
+              {
+                label: "Tell them exactly what they want to hear.",
+                effect: { smarts: 1, addFlags: ["strategic"] },
+                next: "ending",
+              },
+              {
+                label: "Say as little as possible. It's nobody's business but yours.",
+                effect: { heat: 1, addFlags: ["defiant"] },
+                next: "ending",
+              },
+            ],
+          },
+        };
+
+        /* ---------------- endings ---------------- */
+
+        function computeEnding(s) {
+          if (s.health <= 0) {
+            return {
+              tone: "bad",
+              title: "The Infirmary",
+              lines: [
+                "You don't remember most of the walk to medical. What's left of your sentence, you'll do it healing — and whatever you were building on the outside will have to wait for someone who isn't sure yet if it's still standing when they get back.",
+              ],
+            };
+          }
+          if (s.sanity <= 0) {
+            return {
+              tone: "bad",
+              title: "Under Watch",
+              lines: [
+                "The isolation finally won. You're on the psych unit now, medicated and monitored, and the version of you that walked in months ago doesn't check in anymore. Whatever comes after this, it isn't going to be a straight line back.",
+              ],
+            };
+          }
+          if (s.flags.has("new_charge")) {
+            return {
+              tone: "bad",
+              title: "No Parole",
+              lines: [
+                `The board doesn't take long. A new charge on your file during this sentence closes the conversation before it opens — parole denied, ${s.sentence} weeks added back onto your number.`,
+                "You'll get another hearing eventually. Eventually is doing a lot of work in that sentence.",
+              ],
+            };
+          }
+          if (s.flags.has("ratted")) {
+            return {
+              tone: "mixed",
+              title: "Marked Man",
+              lines: [
+                "The board likes cooperation. You're going home sooner than most — but word about who you gave up traveled faster than your release date did. Whatever's waiting outside these walls, some of it followed you out on purpose.",
+              ],
+            };
+          }
+          if (s.flags.has("yard_crew") && s.respect >= 8 && s.connections >= 8) {
+            return {
+              tone: "mixed",
+              title: "Shot Caller",
+              lines: [
+                "You didn't just survive the Crew — you became one of the names that runs it. The board notes your file, flags you as a known STG member, and grants parole anyway, on paper.",
+                "The block already has a request in for when you're back. Everybody in here assumes that's a when, not an if. You're starting to assume it too.",
+              ],
+            };
+          }
+          if (
+            s.flags.has("book_club") &&
+            s.flags.has("completed_program") &&
+            s.smarts >= 8 &&
+            s.flags.has("family_support")
+          ) {
+            return {
+              tone: "good",
+              title: "Clean Slate",
+              lines: [
+                "The board grants parole without much debate — completed program, no new charges, a support system on the outside that never stopped writing back. You walk out the gate into a life that's actually waiting for you.",
+                "It's not going to be easy. But for the first time since intake, it's yours to build.",
+              ],
+            };
+          }
+          if (s.flags.has("violent_incident") && s.health <= 3) {
+            return {
+              tone: "mixed",
+              title: "Written Off",
+              lines: [
+                "You're going home, but not the way you pictured it — banged up, worn down, a file full of incident reports that'll follow you into every job application for years. You made it out. What's left of you made it out too, mostly.",
+              ],
+            };
+          }
+          if (s.flags.has("lone_wolf") && s.sanity <= 4) {
+            return {
+              tone: "mixed",
+              title: "Ghost",
+              lines: [
+                "You never joined anything, never owed anyone, never let anyone close enough to use against you. It worked. You also walk out the gate not really knowing how to let anyone close at all, and nobody's waiting on the other side to teach you.",
+              ],
+            };
+          }
+          return {
+            tone: "mixed",
+            title: "Just Time",
+            lines: [
+              `You did the ${s.sentence} weeks. No headline ending, no clean redemption, no disaster — just a sentence served and a version of you that came out changed in ways you're still finding.`,
+              "Whatever happens next is the part nobody in there could write for you.",
+            ],
+          };
+        }
+
+        /* ---------------- rendering ---------------- */
+
+        function el(tag, attrs, children) {
+          const e = document.createElement(tag);
+          if (attrs) {
+            Object.keys(attrs).forEach((k) => {
+              if (k === "class") e.className = attrs[k];
+              else if (k === "html") e.innerHTML = attrs[k];
+              else e.setAttribute(k, attrs[k]);
+            });
+          }
+          (children || []).forEach((c) => e.appendChild(c));
+          return e;
+        }
+
+        function renderCreation() {
+          root.innerHTML = "";
+          const card = el("div", { class: "card" });
+
+          const nameLabel = el("label", { class: "field" });
+          nameLabel.appendChild(el("span", {}, [document.createTextNode("Your name")]));
+          const nameInput = el("input", { type: "text", id: "nameInput", placeholder: "e.g. Marcus Webb" });
+          nameLabel.appendChild(nameInput);
+          card.appendChild(nameLabel);
+
+          const bgLabel = el("label", { class: "field" });
+          bgLabel.appendChild(el("span", {}, [document.createTextNode("How did you get here?")]));
+          card.appendChild(bgLabel);
+
+          const grid = el("div", { class: "archetypes" });
+          ARCHETYPES.forEach((a) => {
+            const box = el("div", { class: "archetype" + (a.id === selectedArchetype ? " selected" : "") });
+            const head = el("div", { class: "archetype-head" });
+            head.appendChild(el("div", { class: "archetype-icon", html: a.icon }));
+            head.appendChild(el("h3", {}, [document.createTextNode(a.name)]));
+            box.appendChild(head);
+            box.appendChild(el("p", {}, [document.createTextNode(a.desc)]));
+            box.appendChild(el("span", { class: "archetype-tag" }, [document.createTextNode(a.tag)]));
+            box.addEventListener("click", () => {
+              selectedArchetype = a.id;
+              renderCreation();
+              document.getElementById("nameInput").value = nameInput.value;
+            });
+            grid.appendChild(box);
+          });
+          card.appendChild(grid);
+
+          const startBtn = el("button", { class: "primary", style: "margin-top:18px" }, [
+            document.createTextNode("Start Your Sentence"),
+          ]);
+          startBtn.addEventListener("click", () => {
+            const name = nameInput.value.trim() || "You";
+            const archetype = ARCHETYPES.find((a) => a.id === selectedArchetype);
+            state = newState(name, archetype);
+            goTo("intake");
+          });
+          card.appendChild(startBtn);
+
+          root.appendChild(card);
+          nameInput.focus();
+        }
+
+        function statBar(label, value, cls) {
+          const wrap = el("div", { class: "stat" });
+          wrap.appendChild(el("span", { class: "label" }, [document.createTextNode(label)]));
+          const bar = el("div", { class: "bar " + cls });
+          bar.appendChild(el("i", { style: `width:${value * 10}%` }));
+          wrap.appendChild(bar);
+          return wrap;
+        }
+
+        function renderHUD() {
+          const hud = el("div", { class: "hud" });
+          hud.appendChild(statBar("Respect", state.respect, "respect"));
+          hud.appendChild(statBar("Health", state.health, "health"));
+          hud.appendChild(statBar("Sanity", state.sanity, "sanity"));
+          hud.appendChild(statBar("Heat", state.heat, "heat"));
+          return hud;
+        }
+
+        function goTo(nodeId) {
+          let node = NODES[nodeId];
+          if (node && node.redirect) {
+            const r = node.redirect(state);
+            if (r) node = NODES[r];
+          }
+          if (!node) {
+            renderEnding();
+            return;
+          }
+          renderNode(nodeId, node);
+        }
+
+        function renderNode(nodeId, node) {
+          root.innerHTML = "";
+          root.appendChild(renderHUD());
+
+          const chapterNum = CHAPTER_OF[nodeId] || CHAPTER_OF[node.chapterKey] || null;
+          if (chapterNum) {
+            root.appendChild(
+              el("div", { class: "progress" }, [
+                document.createTextNode(`Chapter ${chapterNum} of ${TOTAL_CHAPTERS}`),
+              ])
+            );
+          }
+
+          const card = el("div", { class: "card" });
+          card.appendChild(el("h2", { class: "chapter-title" }, [document.createTextNode(node.title)]));
+
+          const body = el("div", { class: "body-text" });
+          node.text(state).forEach((p) => body.appendChild(el("p", {}, [document.createTextNode(p)])));
+          card.appendChild(body);
+
+          const choicesWrap = el("div", { class: "choices" });
+          node.choices(state).forEach((choice) => {
+            const btn = el("button", {}, [document.createTextNode(choice.label)]);
+            btn.addEventListener("click", () => {
+              applyEffect(choice.effect);
+              if (choice.next === "ending") {
+                renderEnding();
+              } else {
+                goTo(choice.next);
+              }
+            });
+            choicesWrap.appendChild(btn);
+          });
+          card.appendChild(choicesWrap);
+
+          root.appendChild(card);
+        }
+
+        function renderEnding() {
+          const ending = computeEnding(state);
+          root.innerHTML = "";
+          root.appendChild(renderHUD());
+
+          const card = el("div", { class: "card" });
+          card.appendChild(
+            el("h2", { class: "ending-title " + ending.tone }, [document.createTextNode(ending.title)])
+          );
+          card.appendChild(
+            el("div", { class: "ending-sub" }, [document.createTextNode(`${state.name} — end of story`)])
+          );
+
+          const body = el("div", { class: "body-text" });
+          ending.lines.forEach((p) => body.appendChild(el("p", {}, [document.createTextNode(p)])));
+          card.appendChild(body);
+
+          const summary = el("div", { class: "summary" });
+          const rows = [
+            ["Respect", state.respect],
+            ["Health", state.health],
+            ["Sanity", state.sanity],
+            ["Heat", state.heat],
+            ["Muscle", state.muscle],
+            ["Smarts", state.smarts],
+            ["Connections", state.connections],
+            ["Sentence", state.sentence + " wks"],
+          ];
+          rows.forEach(([label, value]) => {
+            const d = document.createElement("div");
+            const b = document.createElement("b");
+            b.textContent = String(value);
+            d.appendChild(document.createTextNode(label + ": "));
+            d.appendChild(b);
+            summary.appendChild(d);
+          });
+          card.appendChild(summary);
+
+          const again = el("button", { class: "primary", style: "margin-top:20px" }, [
+            document.createTextNode("Play Again"),
+          ]);
+          again.addEventListener("click", () => {
+            selectedArchetype = ARCHETYPES[0].id;
+            renderCreation();
+          });
+          card.appendChild(again);
+
+          root.appendChild(card);
+        }
+
+        renderCreation();
+      })();
+    </script>
+  </body>
+</html>
