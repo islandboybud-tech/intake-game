@@ -168,8 +168,110 @@
         background: var(--panel);
         border: 1px solid var(--border);
         border-radius: 14px;
-        padding: 24px;
+        overflow: hidden;
         box-shadow: 0 24px 60px -30px rgba(0, 0, 0, 0.7);
+      }
+
+      .card-body {
+        padding: 24px;
+      }
+
+      /* ---- first-person scene art ---- */
+
+      .scene {
+        position: relative;
+        height: 210px;
+        overflow: hidden;
+        border-bottom: 1px solid var(--border);
+        background: #05070c;
+        transition: filter 0.6s ease;
+      }
+
+      .scene svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .scene .vignette {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse at 50% 42%, transparent 32%, rgba(4, 5, 9, 0.68) 100%);
+        pointer-events: none;
+      }
+
+      .scene .scene-scan {
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 3px);
+        mix-blend-mode: overlay;
+        pointer-events: none;
+      }
+
+      .scene .tag {
+        position: absolute;
+        left: 14px;
+        bottom: 12px;
+        font-family: "Barlow Condensed", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.9);
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+      }
+
+      .scene .beat-dim {
+        position: absolute;
+        inset: 0;
+        background: rgba(4, 5, 9, 0.4);
+      }
+
+      /* ---- reaction beat ---- */
+
+      .beat-body {
+        text-align: center;
+        padding-top: 30px;
+        padding-bottom: 26px;
+      }
+
+      .beat-text {
+        font-family: "Barlow Condensed", sans-serif;
+        font-style: italic;
+        font-weight: 600;
+        font-size: 19px;
+        line-height: 1.5;
+        color: var(--text);
+        margin: 0 0 20px;
+      }
+
+      .delta-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 4px;
+      }
+
+      .delta-chip {
+        font-family: "Barlow Condensed", sans-serif;
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 5px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--panel-2);
+        color: var(--text-dim);
+      }
+
+      .delta-chip.up {
+        color: var(--ok);
+        border-color: rgba(91, 185, 140, 0.4);
+      }
+
+      .delta-chip.down {
+        color: var(--danger);
+        border-color: rgba(224, 102, 75, 0.4);
       }
 
       /* ---- character creation ---- */
@@ -589,6 +691,231 @@
         };
         const TOTAL_CHAPTERS = 10;
 
+        const SCENE_OF = {
+          intake: "processing",
+          cell: "cell",
+          yard: "yard",
+          work: "work",
+          conflict1: "tension",
+          shakedown: "lockdown",
+          shakedown_weapon: "lockdown",
+          letter: "window",
+          program: "classroom",
+          bigfight: "showdown",
+          hearing: "hearing",
+        };
+
+        const SCENE_LABEL = {
+          intake: "Processing — Intake",
+          cell: "Cell Block C",
+          yard: "The Yard",
+          work: "Work Detail",
+          conflict1: "An Ask",
+          shakedown: "Shakedown",
+          shakedown_weapon: "Shakedown",
+          letter: "Visitation / Mail",
+          program: "Program Room",
+          bigfight: "The Yard — Showdown",
+          hearing: "Parole Board",
+        };
+
+        /* ---------------- scene art (inline SVG, first-person framing) ---------------- */
+
+        function svgWrap(inner) {
+          return `<svg viewBox="0 0 400 220" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
+        }
+
+        const GATE_TONES = {
+          good: { c1: "#2a2418", c2: "#0c0a06", light: "#e0b23b", op: 0.5 },
+          bad: { c1: "#241418", c2: "#0a0608", light: "#e0664b", op: 0.22 },
+          mixed: { c1: "#1c202c", c2: "#0a0c12", light: "#8b93a7", op: 0.3 },
+        };
+
+        function sceneSVG(kind, tone) {
+          switch (kind) {
+            case "processing":
+              return svgWrap(`
+                <defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#1b2338"/><stop offset="100%" stop-color="#0c0f18"/>
+                </linearGradient></defs>
+                <rect width="400" height="220" fill="url(#g1)"/>
+                <g opacity="0.55"><rect x="40" y="18" width="90" height="6" rx="3" fill="#cfe0ff"/><rect x="270" y="18" width="90" height="6" rx="3" fill="#cfe0ff"/></g>
+                <ellipse cx="85" cy="40" rx="120" ry="60" fill="#3a4a72" opacity="0.25"/>
+                <ellipse cx="315" cy="40" rx="120" ry="60" fill="#3a4a72" opacity="0.25"/>
+                <g fill="#060810">
+                  <rect x="30" y="150" width="34" height="40" rx="3"/><rect x="80" y="150" width="34" height="40" rx="3"/>
+                  <rect x="130" y="150" width="34" height="40" rx="3"/><rect x="236" y="150" width="34" height="40" rx="3"/>
+                  <rect x="286" y="150" width="34" height="40" rx="3"/><rect x="336" y="150" width="34" height="40" rx="3"/>
+                </g>
+                <rect x="0" y="190" width="400" height="30" fill="#05070c"/>
+              `);
+            case "cell":
+              return svgWrap(`
+                <defs><linearGradient id="g2" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#182036"/><stop offset="100%" stop-color="#0a0d16"/>
+                </linearGradient></defs>
+                <rect width="400" height="220" fill="url(#g2)"/>
+                <rect x="300" y="30" width="50" height="60" rx="2" fill="#3a4a72" opacity="0.4"/>
+                <rect x="40" y="140" width="160" height="14" fill="#05070c"/>
+                <rect x="50" y="110" width="140" height="10" fill="#05070c" opacity="0.8"/>
+                <g fill="#030407">
+                  <rect x="10" y="0" width="10" height="220"/><rect x="70" y="0" width="10" height="220"/>
+                  <rect x="130" y="0" width="10" height="220"/><rect x="190" y="0" width="10" height="220"/>
+                  <rect x="250" y="0" width="10" height="220"/><rect x="310" y="0" width="10" height="220"/>
+                  <rect x="370" y="0" width="10" height="220"/>
+                </g>
+              `);
+            case "yard":
+              return svgWrap(`
+                <defs><linearGradient id="g3" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#25314f"/><stop offset="60%" stop-color="#141b2c"/><stop offset="100%" stop-color="#0a0d16"/>
+                </linearGradient></defs>
+                <rect width="400" height="220" fill="url(#g3)"/>
+                <rect x="0" y="120" width="400" height="14" fill="#05070c"/>
+                <g fill="#05070c" opacity="0.85">
+                  <rect x="20" y="90" width="4" height="44"/><rect x="60" y="90" width="4" height="44"/>
+                  <rect x="100" y="90" width="4" height="44"/><rect x="300" y="90" width="4" height="44"/>
+                  <rect x="340" y="90" width="4" height="44"/><rect x="380" y="90" width="4" height="44"/>
+                </g>
+                <g fill="#05070c">
+                  <circle cx="160" cy="118" r="5"/><rect x="155" y="123" width="10" height="16" rx="3"/>
+                  <circle cx="185" cy="120" r="5"/><rect x="180" y="125" width="10" height="14" rx="3"/>
+                  <circle cx="230" cy="119" r="5"/><rect x="225" y="124" width="10" height="15" rx="3"/>
+                </g>
+                <rect x="0" y="134" width="400" height="86" fill="#0d1220"/>
+              `);
+            case "work":
+              return svgWrap(`
+                <defs><linearGradient id="g4" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#1c2438"/><stop offset="100%" stop-color="#0b0e17"/>
+                </linearGradient></defs>
+                <rect width="400" height="220" fill="url(#g4)"/>
+                <g fill="#05070c"><rect x="20" y="60" width="360" height="10"/><rect x="20" y="100" width="360" height="10"/><rect x="20" y="140" width="360" height="10"/></g>
+                <g fill="#141a29"><rect x="30" y="40" width="20" height="20"/><rect x="60" y="42" width="20" height="18"/><rect x="100" y="38" width="20" height="22"/><rect x="300" y="80" width="20" height="20"/><rect x="340" y="78" width="20" height="22"/></g>
+                <rect x="0" y="180" width="400" height="40" fill="#05070c"/>
+              `);
+            case "tension":
+              return svgWrap(`
+                <defs><radialGradient id="g5" cx="50%" cy="35%" r="75%">
+                  <stop offset="0%" stop-color="#3a2032"/><stop offset="100%" stop-color="#0c0a10"/>
+                </radialGradient></defs>
+                <rect width="400" height="220" fill="url(#g5)"/>
+                <g fill="#05070c"><circle cx="150" cy="110" r="10"/><rect x="138" y="120" width="24" height="50" rx="6"/><circle cx="250" cy="110" r="10"/><rect x="238" y="120" width="24" height="50" rx="6"/></g>
+                <rect x="0" y="170" width="400" height="50" fill="#05070c"/>
+                <ellipse cx="200" cy="90" rx="140" ry="40" fill="#e0664b" opacity="0.12"/>
+              `);
+            case "lockdown":
+              return svgWrap(`
+                <defs><linearGradient id="g6" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#1c1418"/><stop offset="100%" stop-color="#0a0708"/>
+                </linearGradient></defs>
+                <rect width="400" height="220" fill="url(#g6)"/>
+                <polygon points="180,0 220,0 320,220 80,220" fill="#fff4d6" opacity="0.06"/>
+                <ellipse cx="200" cy="0" rx="60" ry="20" fill="#fff4d6" opacity="0.3"/>
+                <g fill="#05070c"><rect x="60" y="150" width="120" height="12"/><rect x="240" y="160" width="90" height="12"/></g>
+                <rect x="0" y="0" width="400" height="220" fill="#e0664b" opacity="0.05"/>
+              `);
+            case "window":
+              return svgWrap(`
+                <defs><linearGradient id="g7" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#2a2c22"/><stop offset="100%" stop-color="#0e0f0a"/>
+                </linearGradient></defs>
+                <rect width="400" height="220" fill="url(#g7)"/>
+                <rect x="160" y="20" width="80" height="100" rx="2" fill="#e0b23b" opacity="0.18"/>
+                <line x1="200" y1="20" x2="200" y2="120" stroke="#05070c" stroke-width="4"/>
+                <line x1="160" y1="70" x2="240" y2="70" stroke="#05070c" stroke-width="4"/>
+                <g transform="translate(150,150)" fill="#05070c"><polygon points="0,0 100,0 100,60 0,60"/><polygon points="0,0 50,35 100,0" fill="#0e1220"/></g>
+              `);
+            case "classroom":
+              return svgWrap(`
+                <defs><linearGradient id="g8" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#232a20"/><stop offset="100%" stop-color="#0c0f0a"/>
+                </linearGradient></defs>
+                <rect width="400" height="220" fill="url(#g8)"/>
+                <rect x="40" y="30" width="150" height="60" rx="3" fill="#05070c"/>
+                <g fill="#141a29"><rect x="60" y="140" width="40" height="24"/><rect x="130" y="140" width="40" height="24"/><rect x="230" y="150" width="40" height="24"/><rect x="300" y="150" width="40" height="24"/></g>
+                <rect x="0" y="190" width="400" height="30" fill="#05070c"/>
+              `);
+            case "showdown":
+              return svgWrap(`
+                <defs><radialGradient id="g9" cx="50%" cy="55%" r="70%">
+                  <stop offset="0%" stop-color="#2c2438"/><stop offset="100%" stop-color="#08070c"/>
+                </radialGradient></defs>
+                <rect width="400" height="220" fill="url(#g9)"/>
+                <g fill="#05070c" opacity="0.9"><circle cx="40" cy="120" r="8"/><rect x="30" y="128" width="20" height="30"/><circle cx="90" cy="110" r="8"/><rect x="80" y="118" width="20" height="30"/><circle cx="310" cy="112" r="8"/><rect x="300" y="120" width="20" height="30"/><circle cx="360" cy="120" r="8"/><rect x="350" y="128" width="20" height="30"/></g>
+                <g fill="#0a0508"><circle cx="180" cy="100" r="10"/><rect x="168" y="110" width="24" height="50" rx="6"/><circle cx="230" cy="100" r="10"/><rect x="218" y="110" width="24" height="50" rx="6"/></g>
+                <polygon points="0,0 160,0 40,220 0,220" fill="#fff4d6" opacity="0.05"/>
+              `);
+            case "hearing":
+              return svgWrap(`
+                <defs><linearGradient id="g10" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#1a2130"/><stop offset="100%" stop-color="#0a0d15"/>
+                </linearGradient></defs>
+                <rect width="400" height="220" fill="url(#g10)"/>
+                <g fill="#05070c"><circle cx="150" cy="70" r="12"/><rect x="135" y="82" width="30" height="40" rx="6"/><circle cx="200" cy="65" r="12"/><rect x="185" y="77" width="30" height="40" rx="6"/><circle cx="250" cy="70" r="12"/><rect x="235" y="82" width="30" height="40" rx="6"/></g>
+                <rect x="90" y="150" width="220" height="16" rx="3" fill="#05070c"/>
+                <rect x="0" y="166" width="400" height="54" fill="#0d1220"/>
+              `);
+            case "gate": {
+              const t = GATE_TONES[tone] || GATE_TONES.mixed;
+              return svgWrap(`
+                <defs><linearGradient id="g11" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="${t.c1}"/><stop offset="100%" stop-color="${t.c2}"/>
+                </linearGradient></defs>
+                <rect width="400" height="220" fill="url(#g11)"/>
+                <rect x="150" y="20" width="100" height="180" fill="#05070c"/>
+                <rect x="160" y="30" width="80" height="160" fill="${t.light}" opacity="${t.op}"/>
+                <g fill="#030407"><rect x="0" y="0" width="150" height="220"/><rect x="250" y="0" width="150" height="220"/></g>
+              `);
+            }
+            default:
+              return svgWrap(`<rect width="400" height="220" fill="#0c0f18"/>`);
+          }
+        }
+
+        function moodFilter(s) {
+          if (!s) return "none";
+          const f = [];
+          if (s.sanity <= 4) f.push("saturate(0.5)", "contrast(0.94)");
+          else if (s.sanity <= 6) f.push("saturate(0.78)");
+          if (s.heat >= 7) f.push("sepia(0.18)", "hue-rotate(-6deg)", "contrast(1.08)");
+          return f.length ? f.join(" ") : "none";
+        }
+
+        function renderScene(kind, label, tone, dim) {
+          const overlays = [el("div", { class: "vignette" }), el("div", { class: "scene-scan" })];
+          if (label) overlays.push(el("div", { class: "tag" }, [document.createTextNode(label)]));
+          if (dim) overlays.push(el("div", { class: "beat-dim" }));
+          return el(
+            "div",
+            { class: "scene", html: sceneSVG(kind, tone), style: `filter:${moodFilter(state)}` },
+            overlays
+          );
+        }
+
+        /* ---------------- stat deltas (for reaction beats) ---------------- */
+
+        const STAT_KEYS = ["muscle", "smarts", "connections", "respect", "health", "sanity", "heat"];
+        const STAT_LABELS = {
+          muscle: "Muscle",
+          smarts: "Smarts",
+          connections: "Connections",
+          respect: "Respect",
+          health: "Health",
+          sanity: "Sanity",
+          heat: "Heat",
+        };
+
+        function snapshotStats(s) {
+          const o = {};
+          STAT_KEYS.forEach((k) => (o[k] = s[k]));
+          return o;
+        }
+
+        function diffStats(before, after) {
+          return STAT_KEYS.map((k) => ({ key: k, delta: after[k] - before[k] })).filter((d) => d.delta !== 0);
+        }
+
         const NODES = {
           intake: {
             title: "Intake",
@@ -625,6 +952,7 @@
               {
                 label: "Get in his face. Make it clear that doesn't happen twice.",
                 effect: { respect: 2, health: -1, addFlags: ["earned_respect"] },
+                feel: "Your pulse is still hammering, but nobody tests you twice tonight. Small relief. Smaller pride. You're not sure yet which one is going to last.",
                 next: "yard",
               },
               {
@@ -635,6 +963,7 @@
               {
                 label: "Report it to the CO on the block.",
                 effect: { heat: 1, respect: -2, addFlags: ["snitch_tag"] },
+                feel: "The CO writes it down without looking up. Word moves faster than paperwork in here — you can already feel people looking at you differently.",
                 next: "yard",
               },
             ],
@@ -745,11 +1074,13 @@
                   {
                     label: "Agree. You're in this deep already.",
                     effect: { respect: 2, connections: 1, heat: 3, addFlags: ["held_weapon"] },
+                    feel: "It's just cloth and weight in your hand, you tell yourself. It doesn't feel like just anything. You put it where it goes and try not to think about it.",
                     next: "shakedown",
                   },
                   {
                     label: "Refuse. Not worth what it costs you.",
                     effect: { respect: -2, connections: -1, addFlags: ["refused_crew"] },
+                    feel: "You watch something close in his face — not anger, just a door. That door doesn't open twice, and you both know it.",
                     next: "shakedown",
                   },
                 ];
@@ -806,11 +1137,13 @@
               {
                 label: "Take it yourself. You held it, it's yours.",
                 effect: { respect: 3, connections: 1, sentence: 26, addFlags: ["new_charge"] },
+                feel: "The word comes out steady. Inside, something else just got heavier than the thing they found — and it's going to stay heavy for a while.",
                 next: "letter",
               },
               {
                 label: "Give up who handed it to you.",
                 effect: { connections: -3, respect: -3, heat: -2, addFlags: ["ratted"] },
+                feel: "You say the name. It's the easiest hard thing you've ever done, and you already know you'll be thinking about it long after you're out.",
                 next: "letter",
               },
             ],
@@ -826,6 +1159,7 @@
               {
                 label: "Write back. Stay close, tell them the truth.",
                 effect: { sanity: 2, addFlags: ["family_support"] },
+                feel: "For a few minutes, writing it out, you're not in here at all. You fold the letter twice before you can make yourself stop rereading it.",
                 next: "program",
               },
               {
@@ -836,6 +1170,7 @@
               {
                 label: "Don't respond. Easier if they stop waiting on you.",
                 effect: { sanity: -2, addFlags: ["cut_ties"] },
+                feel: "You tell yourself it's kinder this way. It doesn't feel kind. It just feels quiet, and the quiet doesn't go away after you put the letter down.",
                 next: "program",
               },
             ],
@@ -880,11 +1215,13 @@
                 {
                   label: "Fight. Finish it clean.",
                   effect: { muscle: 1, respect: 2, health: -3, addFlags: ["violent_incident"] },
+                  feel: "Your knuckles remember it before your head catches up. Whatever this bought you, you're going to be paying it back for a while.",
                   next: "hearing",
                 },
                 {
                   label: "Walk away. Let them talk.",
                   effect: { sanity: -1, respect: -1 },
+                  feel: "Nothing happened. You still feel like something did — like you left a piece of the argument you'll be replaying for days.",
                   next: "hearing",
                 },
               ];
@@ -916,6 +1253,7 @@
               {
                 label: "Tell them everything, straight.",
                 effect: { sanity: 1, smarts: 1 },
+                feel: "It's the first time in months you've said all of it out loud, in order, without cutting yourself off. You didn't expect it to cost this much to just talk.",
                 next: "ending",
               },
               {
@@ -1043,16 +1381,19 @@
         function renderCreation() {
           root.innerHTML = "";
           const card = el("div", { class: "card" });
+          card.appendChild(renderScene("processing", "Intake — Processing Room"));
+
+          const body = el("div", { class: "card-body" });
 
           const nameLabel = el("label", { class: "field" });
           nameLabel.appendChild(el("span", {}, [document.createTextNode("Your name")]));
           const nameInput = el("input", { type: "text", id: "nameInput", placeholder: "e.g. Marcus Webb" });
           nameLabel.appendChild(nameInput);
-          card.appendChild(nameLabel);
+          body.appendChild(nameLabel);
 
           const bgLabel = el("label", { class: "field" });
           bgLabel.appendChild(el("span", {}, [document.createTextNode("How did you get here?")]));
-          card.appendChild(bgLabel);
+          body.appendChild(bgLabel);
 
           const grid = el("div", { class: "archetypes" });
           ARCHETYPES.forEach((a) => {
@@ -1070,7 +1411,7 @@
             });
             grid.appendChild(box);
           });
-          card.appendChild(grid);
+          body.appendChild(grid);
 
           const startBtn = el("button", { class: "primary", style: "margin-top:18px" }, [
             document.createTextNode("Start Your Sentence"),
@@ -1081,8 +1422,9 @@
             state = newState(name, archetype);
             goTo("intake");
           });
-          card.appendChild(startBtn);
+          body.appendChild(startBtn);
 
+          card.appendChild(body);
           root.appendChild(card);
           nameInput.focus();
         }
@@ -1132,18 +1474,27 @@
           }
 
           const card = el("div", { class: "card" });
-          card.appendChild(el("h2", { class: "chapter-title" }, [document.createTextNode(node.title)]));
+          const sceneKind = SCENE_OF[nodeId] || "processing";
+          const sceneLabel = SCENE_LABEL[nodeId] || node.title;
+          card.appendChild(renderScene(sceneKind, sceneLabel));
 
-          const body = el("div", { class: "body-text" });
-          node.text(state).forEach((p) => body.appendChild(el("p", {}, [document.createTextNode(p)])));
-          card.appendChild(body);
+          const body = el("div", { class: "card-body" });
+          body.appendChild(el("h2", { class: "chapter-title" }, [document.createTextNode(node.title)]));
+
+          const textWrap = el("div", { class: "body-text" });
+          node.text(state).forEach((p) => textWrap.appendChild(el("p", {}, [document.createTextNode(p)])));
+          body.appendChild(textWrap);
 
           const choicesWrap = el("div", { class: "choices" });
           node.choices(state).forEach((choice) => {
             const btn = el("button", {}, [document.createTextNode(choice.label)]);
             btn.addEventListener("click", () => {
+              const before = snapshotStats(state);
               applyEffect(choice.effect);
-              if (choice.next === "ending") {
+              const deltas = diffStats(before, state);
+              if (choice.feel) {
+                renderBeat(nodeId, choice.feel, deltas, choice.next);
+              } else if (choice.next === "ending") {
                 renderEnding();
               } else {
                 goTo(choice.next);
@@ -1151,8 +1502,47 @@
             });
             choicesWrap.appendChild(btn);
           });
-          card.appendChild(choicesWrap);
+          body.appendChild(choicesWrap);
 
+          card.appendChild(body);
+          root.appendChild(card);
+        }
+
+        function renderBeat(nodeId, feelText, deltas, nextId) {
+          root.innerHTML = "";
+          root.appendChild(renderHUD());
+
+          const card = el("div", { class: "card" });
+          const sceneKind = SCENE_OF[nodeId] || "processing";
+          const sceneLabel = SCENE_LABEL[nodeId] || "";
+          card.appendChild(renderScene(sceneKind, sceneLabel, null, true));
+
+          const body = el("div", { class: "card-body beat-body" });
+          body.appendChild(el("p", { class: "beat-text" }, [document.createTextNode(feelText)]));
+
+          if (deltas.length) {
+            const chips = el("div", { class: "delta-row" });
+            deltas.forEach((d) => {
+              const sign = d.delta > 0 ? "+" : "";
+              chips.appendChild(
+                el("span", { class: "delta-chip " + (d.delta > 0 ? "up" : "down") }, [
+                  document.createTextNode(`${STAT_LABELS[d.key]} ${sign}${d.delta}`),
+                ])
+              );
+            });
+            body.appendChild(chips);
+          }
+
+          const cont = el("button", { class: "primary", style: "margin-top:18px" }, [
+            document.createTextNode("Continue"),
+          ]);
+          cont.addEventListener("click", () => {
+            if (nextId === "ending") renderEnding();
+            else goTo(nextId);
+          });
+          body.appendChild(cont);
+
+          card.appendChild(body);
           root.appendChild(card);
         }
 
@@ -1162,16 +1552,19 @@
           root.appendChild(renderHUD());
 
           const card = el("div", { class: "card" });
-          card.appendChild(
+          card.appendChild(renderScene("gate", "Release", ending.tone));
+
+          const body = el("div", { class: "card-body" });
+          body.appendChild(
             el("h2", { class: "ending-title " + ending.tone }, [document.createTextNode(ending.title)])
           );
-          card.appendChild(
+          body.appendChild(
             el("div", { class: "ending-sub" }, [document.createTextNode(`${state.name} — end of story`)])
           );
 
-          const body = el("div", { class: "body-text" });
-          ending.lines.forEach((p) => body.appendChild(el("p", {}, [document.createTextNode(p)])));
-          card.appendChild(body);
+          const textWrap = el("div", { class: "body-text" });
+          ending.lines.forEach((p) => textWrap.appendChild(el("p", {}, [document.createTextNode(p)])));
+          body.appendChild(textWrap);
 
           const summary = el("div", { class: "summary" });
           const rows = [
@@ -1192,7 +1585,7 @@
             d.appendChild(b);
             summary.appendChild(d);
           });
-          card.appendChild(summary);
+          body.appendChild(summary);
 
           const again = el("button", { class: "primary", style: "margin-top:20px" }, [
             document.createTextNode("Play Again"),
@@ -1201,8 +1594,9 @@
             selectedArchetype = ARCHETYPES[0].id;
             renderCreation();
           });
-          card.appendChild(again);
+          body.appendChild(again);
 
+          card.appendChild(body);
           root.appendChild(card);
         }
 
