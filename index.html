@@ -730,6 +730,11 @@
           program: "classroom",
           bigfight: "showdown",
           hearing: "hearing",
+          denied: "hearing",
+          long_stretch: "cell",
+          riot: "riot",
+          riot_aftermath: "lockdown",
+          hearing2: "hearing",
         };
 
         const SCENE_LABEL = {
@@ -747,6 +752,11 @@
           program: "Program Room",
           bigfight: "The Yard — Showdown",
           hearing: "Parole Board",
+          denied: "Parole Denied",
+          long_stretch: "The Long Stretch",
+          riot: "The Riot",
+          riot_aftermath: "Aftermath — Lockdown",
+          hearing2: "Parole Board — Second Hearing",
         };
 
         /* ---------------- scene art (inline SVG, first-person framing) ---------------- */
@@ -886,6 +896,22 @@
                 <g fill="#05070c" opacity="0.9"><circle cx="40" cy="120" r="8"/><rect x="30" y="128" width="20" height="30"/><circle cx="90" cy="110" r="8"/><rect x="80" y="118" width="20" height="30"/><circle cx="310" cy="112" r="8"/><rect x="300" y="120" width="20" height="30"/><circle cx="360" cy="120" r="8"/><rect x="350" y="128" width="20" height="30"/></g>
                 <g fill="#0a0508"><circle cx="180" cy="100" r="10"/><rect x="168" y="110" width="24" height="50" rx="6"/><circle cx="230" cy="100" r="10"/><rect x="218" y="110" width="24" height="50" rx="6"/></g>
                 <polygon points="0,0 160,0 40,220 0,220" fill="#fff4d6" opacity="0.05"/>
+              `);
+            case "riot":
+              return svgWrap(`
+                <defs><radialGradient id="g13" cx="50%" cy="60%" r="80%">
+                  <stop offset="0%" stop-color="#3a1e14"/><stop offset="100%" stop-color="#0a0605"/>
+                </radialGradient></defs>
+                <rect width="400" height="220" fill="url(#g13)"/>
+                <ellipse cx="200" cy="40" rx="220" ry="60" fill="#e0664b" opacity="0.18"/>
+                <g fill="#05070c" opacity="0.9">
+                  <circle cx="70" cy="140" r="8"/><rect x="60" y="148" width="20" height="34"/>
+                  <circle cx="330" cy="135" r="8"/><rect x="320" y="143" width="20" height="34"/>
+                  <circle cx="200" cy="150" r="8"/><rect x="190" y="158" width="20" height="30"/>
+                </g>
+                <rect x="0" y="185" width="400" height="35" fill="#05070c"/>
+                <polygon points="40,220 80,150 110,220" fill="#000" opacity="0.5"/>
+                <polygon points="280,220 320,140 360,220" fill="#000" opacity="0.5"/>
               `);
             case "hearing":
               return svgWrap(`
@@ -1414,6 +1440,142 @@
               },
             ],
           },
+
+          denied: {
+            title: "Denied",
+            text: () => [
+              `"Given the new charge on your file, the board isn't in a position to grant release today." The chair doesn't say it unkindly. That almost makes it worse.`,
+              "You're not walking out the gate. Not this time. Whatever's left of your sentence, you're doing it — and now there's more of it than there was yesterday.",
+            ],
+            choices: () => [{ label: "Keep moving.", effect: {}, next: "long_stretch" }],
+          },
+
+          long_stretch: {
+            title: "The Long Stretch",
+            text: () => [
+              "Time does something different once you know exactly how much more of it you owe. The days stop being days and start being one long grey stretch with count times cut into it.",
+              "You find a way to get through it. Everybody does, one way or another.",
+            ],
+            choices: (s) => {
+              const opts = [
+                { label: "Keep your head down. Just get through it.", effect: { sanity: 1 }, next: "riot" },
+                { label: "Let the resentment build. You've earned it.", effect: { heat: 1, sanity: -1 }, next: "riot" },
+              ];
+              if (s.flags.has("yard_crew")) {
+                opts.splice(1, 0, {
+                  label: "Lean further into the Crew. They're the only thing that hasn't changed.",
+                  effect: { connections: 1, heat: 1 },
+                  next: "riot",
+                });
+              } else {
+                opts.splice(1, 0, {
+                  label: "Put the extra time into something that actually helps you.",
+                  effect: { smarts: 1 },
+                  next: "riot",
+                });
+              }
+              return opts;
+            },
+          },
+
+          riot: {
+            title: "The Riot",
+            text: () => [
+              "It starts as a shakedown that goes wrong and turns into something nobody can call back — within minutes it's not one fight anymore, it's the whole block. COs pull back to the gate and hold it. For a few hours, the yard belongs to whoever's willing to take it.",
+              "Whatever you do in the next few minutes, it's the kind of thing people remember about you for the rest of your time here.",
+            ],
+            choices: (s) => {
+              const opts = [
+                {
+                  label: "Barricade in your cell. Wait it out.",
+                  effect: { sanity: 1, addFlags: ["riot_hid"] },
+                  next: "riot_aftermath",
+                },
+                {
+                  label: "A CO gets cornered and outnumbered near the block office. Help him.",
+                  effect: { respect: 2, heat: -2, health: -2, addFlags: ["riot_helped_co"] },
+                  feel: "You don't think it through, you just move. Afterward you can't fully explain why — except that watching it happen felt worse than getting hit.",
+                  next: "riot_aftermath",
+                },
+                {
+                  label: "Get in it. Whatever this is, it's finally something you can hit back at.",
+                  effect: { muscle: 1, respect: 2, health: -4, heat: 3, addFlags: ["riot_joined"] },
+                  feel: "For a while none of it feels like a choice at all — just weeks of pressure finally finding somewhere to go.",
+                  next: "riot_aftermath",
+                },
+              ];
+              if (s.flags.has("yard_crew")) {
+                opts.push({
+                  label: "Find your people. Whatever happens, you're not doing it alone.",
+                  effect: { connections: 2, health: -2, heat: 2, addFlags: ["riot_with_crew"] },
+                  next: "riot_aftermath",
+                });
+              }
+              return opts;
+            },
+          },
+
+          riot_aftermath: {
+            title: "After",
+            text: (s) => {
+              if (s.flags.has("riot_joined")) {
+                return [
+                  "The lockdown after takes days. Investigators go cell to cell with a list of names witnesses gave up, and yours is on it.",
+                  `"You want to tell me your side of it," the investigator says, "or should I just write down what I've already got?"`,
+                ];
+              }
+              if (s.flags.has("riot_helped_co")) {
+                return [
+                  "The lockdown after takes days, but when the interviews get to you, the CO you helped is the one who asked for you by name — not as a suspect, as a witness on his side of it.",
+                  "It doesn't erase the extra time on your sentence. It's still the first thing that's gone your way in a while.",
+                ];
+              }
+              if (s.flags.has("riot_with_crew")) {
+                return [
+                  "The lockdown after takes days. Somehow your name never quite makes it onto anyone's list — the Crew's good at that, when it matters.",
+                  "You don't ask how. You're pretty sure you don't want to know.",
+                ];
+              }
+              return [
+                "The lockdown after takes days. You spend most of it in your cell, same as most of the block, waiting for the interviews to work their way down to nobody in particular.",
+              ];
+            },
+            choices: (s) => {
+              if (s.flags.has("riot_joined")) {
+                return [
+                  {
+                    label: "Own what you did.",
+                    effect: { respect: 2, sentence: 13, addFlags: ["riot_charge"] },
+                    feel: "It's the truth, at least. The truth is expensive in here, same as everywhere else.",
+                    next: "hearing2",
+                  },
+                  {
+                    label: "Deny it. Make them prove it.",
+                    effect:
+                      s.smarts >= 6 ? { heat: 1 } : { sentence: 13, heat: 1, addFlags: ["riot_charge"] },
+                    feel:
+                      s.smarts >= 6
+                        ? "You stick to it, calm, consistent, and eventually the investigator moves on to somebody with a worse story. It costs you something to lie that well. You just can't measure it yet."
+                        : "You stick to it, but not well enough — the story doesn't hold, and they write down what they were always going to write down anyway.",
+                    next: "hearing2",
+                  },
+                ];
+              }
+              return [{ label: "Keep moving.", effect: {}, next: "hearing2" }];
+            },
+          },
+
+          hearing2: {
+            title: "The Board, Again",
+            text: () => [
+              "Second hearing, same folding table, a file that's thicker than it was last time. They already know about the riot — everyone in the room does.",
+              `"So," the chair says. "Tell us why this time should go differently."`,
+            ],
+            choices: () => [
+              { label: "Make your case, straight.", effect: { sanity: 1 }, next: "ending" },
+              { label: "Say as little as possible and let the file speak for itself.", effect: { heat: 1 }, next: "ending" },
+            ],
+          },
         };
 
         /* ---------------- endings ---------------- */
@@ -1437,7 +1599,17 @@
               ],
             };
           }
-          if (s.flags.has("new_charge")) {
+          if (s.flags.has("riot_charge")) {
+            return {
+              tone: "bad",
+              title: "Doing Real Time",
+              lines: [
+                "Two charges deep now, and the board stops pretending this is a close call. You're maxing out — full sentence, day for day, no early number left to hope for.",
+                "Whatever this next stretch looks like, it's going to go the long way, and everybody in the room already knows it.",
+              ],
+            };
+          }
+          if (s.flags.has("new_charge") && !s.flags.has("did_extension")) {
             return {
               tone: "bad",
               title: "No Parole",
@@ -1505,6 +1677,25 @@
               title: "Made Man",
               lines: [
                 "You went in green and came out with a rank that means something on both sides of the fence. The board grants parole, but the Crew already has a coat lined up for you the day you get out — this isn't over just because your sentence is.",
+              ],
+            };
+          }
+          if (s.flags.has("did_extension") && s.flags.has("riot_helped_co")) {
+            return {
+              tone: "mixed",
+              title: "Second Chance",
+              lines: [
+                "It's not the parole you would've gotten the easy way — nobody forgets the extra charge, or the riot, or how long it took to get here. But somebody vouched for you when it actually mattered, and this time the board listens.",
+                "You walk out changed twice over instead of once. That's not nothing.",
+              ],
+            };
+          }
+          if (s.flags.has("did_extension")) {
+            return {
+              tone: "mixed",
+              title: "The Long Way Round",
+              lines: [
+                "You did the extra time the hard way — quiet, careful, giving them nothing else to hold against you. It worked, eventually. It just took twice as long as it should have, and you're still finding out what that cost you underneath.",
               ],
             };
           }
@@ -1732,6 +1923,11 @@
         }
 
         function renderEnding() {
+          if (state.flags.has("new_charge") && !state.flags.has("did_extension")) {
+            state.flags.add("did_extension");
+            goTo("denied");
+            return;
+          }
           const ending = computeEnding(state);
           root.innerHTML = "";
           root.appendChild(renderHUD());
